@@ -27,7 +27,26 @@ int main(int argc, char **argv)
         free(p);
         free(p);
         break;
+    case 4:
+        //Normal malloc testing
+        p = (int *) malloc(sizeof(int) * 10);
+        printf("Malloc succeeded\n Assigning values for array");
+
+        int i;
+        int* ptr = p;
+        // Assigning p[i] = i
+        for (i = 0; i < 10; i++)
+        { *ptr += i; ptr++; }
+        // print out values of p[i]s
+        for (i = 0; i < 10; i++)
+            printf("Value of index %d is: %d \n", i, *(p+i));
+        break;
+    case 5:
+        p = (int*) malloc(sizeof(int) * 10);
+        int* q;
+        q = (int*) malloc(sizeof(int) * 1024); 
     }
+    
     
     return EXIT_SUCCESS;
 }
