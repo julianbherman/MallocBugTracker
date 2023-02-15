@@ -4,6 +4,7 @@ A Systems Programming Homework
 
 !!! NEW IMPLEMENTATION !!!
 
+-last 8 bytes of memory are all 0 indicating end of memory
 -alignment to 8 bytes is guaranteed
 -restructuring of metadata/header:
  --header size is 8 bytes

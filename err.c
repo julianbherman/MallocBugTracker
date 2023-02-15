@@ -47,6 +47,17 @@ int main(int argc, char **argv)
         p = (int*) malloc(sizeof(int) * 10);
         int* q;
         q = (int*) malloc(sizeof(int) * 1024); 
+	break;
+
+    case 6:
+	int* r;
+	p = (int*) malloc(sizeof(int) * 100);
+        q = (int*) malloc(sizeof(int) * 100); 
+	free(p);
+	r = (int*) malloc(sizeof(int) * 100);
+	free(q);
+	free(r);
+	break;
     }
     
     return EXIT_SUCCESS;
