@@ -18,4 +18,4 @@ A Systems Programming Homework
      --the sign represents whether it's in_use
        --(negative meaning NOT in_use, positive meaning in_use)
 
--- Maximum capacity of payload: 4080 bits ~ 4080 chars ~ 1020 integers
+-- Maximum capacity of payload: 4080 bytes ~ 4080 chars ~ 1020 integers
