@@ -80,8 +80,12 @@ int main(int argc, char **argv)
         // Chars testing
         // EXPECTED SUCCESS
         c = (char*) malloc(sizeof(char) *20);
-        c = "Hello Wolrd";
-        printf("%s \n", c);
+	printf("The call to malloc returns pointer address: %p\n", c);
+
+        c = "Hello World!";
+        printf("%s\n", c);
+
+	printf("The call to free is with pointer address: %p\n", c);
         free(c);
         break;
     }
