@@ -80,8 +80,15 @@ int main(int argc, char **argv)
         // Chars testing
         // EXPECTED SUCCESS
         c = (char*) malloc(sizeof(char) *20);
-        c = "Hello Wolrd";
-        printf("%s \n", c);
+        // write to c
+        for (i = 0; i < 20; i++)
+            c[i] = 'a'+i;
+
+        //print from c
+        for (i = 0; i < 20; i++)
+            printf("%c  ", c[i]);
+        printf("\n");
+        free(c);
         free(c);
         break;
     }

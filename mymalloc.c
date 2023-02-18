@@ -5,6 +5,12 @@
 
 #define MEMSIZE 512	// capacity is 512 QUADWORDS = 4096 BYTES
 #define HEADERSIZE 1   // header is 1 QUADWORD = 8 BYTES
+#define RED     "\033[31m"      /* Red - Text Color */
+#define RESET   "\033[0m"
+#ifndef DEBUG
+#define DEBUG 0
+#endif
+
 
 /* !!! NEW IMPLEMENTATION !!!
  * -last 8 bytes of memory are all 0 indicating end of memory
@@ -74,11 +80,11 @@ static void *allocateChunk(double* p, int size, int curr_chunk_size){
 	}
 	// not enough space to split chunk, then leave the size as is (wasteful)
 	// wastes a max of ~(15 bytes + initial padding of size) per each chunk
-	printf("Chunk allocated!\n---Payload at: %p\n", (p+HEADERSIZE));
+	if (DEBUG > 0) printf("Chunk allocated!\n---Payload at: %p\n", (p+HEADERSIZE));
 	return (void*)(p + HEADERSIZE);
 }
 
-void *mymalloc(int size){
+void *mymalloc(int size, char* file, int line){
 	if ( !size ) { return NULL; }	// size is 0
 
 	double* p = memory;
@@ -104,7 +110,7 @@ void *mymalloc(int size){
 		p += HEADERSIZE + curr_chunk_size;   // shift to next chunk
 	}
 
-	printf("No space in memory\n");
+	printf(RED "ERROR IN FILE [%s]\nLINE %d\nNo space in memory\n" RESET, file, line);
 	return NULL;
 }
 
@@ -124,11 +130,11 @@ static bool ptrValid(void *ptr){
 	return false;	// ptr is NOT valid!
 }
 
-void myfree(void *ptr){
+void myfree(void *ptr, char* file, int line){
 
 	if ( !ptrValid(ptr) )	// if the ptr was not created by mymalloc()
 	{
-		printf("Pointer not valid to be freed!\n");
+		printf(RED "ERROR IN FILE [%s]\nLINE %d\nPointer not valid to be freed!\n" RESET, file, line);
 		return;
 	}
 	// ptr WAS created by mymalloc(), proceed to free it
@@ -155,10 +161,12 @@ void myfree(void *ptr){
 			*(next_next_hdr_ptr+1) = *prev_hdr_ptr;
 		}
 
-		printf("Free (with coalesce) success: ");
-		printf("Both prev_chunk and next_chunk were free!\n");
-		printf("---Changed prev_chunk header to have size: %d\n",\
-			*prev_hdr_ptr);
+		if (DEBUG > 0){
+			printf("Free (with coalesce) success: ");
+			printf("Both prev_chunk and next_chunk were free!\n");
+			printf("---Changed prev_chunk header to have size: %d\n",\
+				*prev_hdr_ptr);
+		}
 
 	} else if (*(curr_hdr_ptr+1) < 0) {// prev_chunk is free and NOT START 
 		// update prev_chunk
@@ -172,10 +180,12 @@ void myfree(void *ptr){
 			*(next_hdr_ptr+1) = *prev_hdr_ptr;
 		}
 		
-		printf("Free (with coalesce) success: ");
-		printf("Only the prev_chunk was free!\n");
-		printf("---Changed prev_chunk header to have size: %d\n",\
-			*prev_hdr_ptr);
+		if (DEBUG > 0){
+			printf("Free (with coalesce) success: ");
+			printf("Only the prev_chunk was free!\n");
+			printf("---Changed prev_chunk header to have size: %d\n",\
+				*prev_hdr_ptr);
+		}
 
 	} else if (*next_hdr_ptr < 0) {// next_chunk is free and NOT END 
 		// update curr_chunk
@@ -188,10 +198,12 @@ void myfree(void *ptr){
 			*(next_next_hdr_ptr+1) = *curr_hdr_ptr;
 		}
 
-		printf("Free (with coalesce) success: ");
-		printf("Only the next_chunk was free!\n");
-		printf("---Changed curr_chunk header to have size: %d\n",\
-			*curr_hdr_ptr);
+		if (DEBUG > 0){
+			printf("Free (with coalesce) success: ");
+			printf("Only the next_chunk was free!\n");
+			printf("---Changed curr_chunk header to have size: %d\n",\
+				*curr_hdr_ptr);
+		}
 
 	} else {   // neither prev_chunk or next_chunk are free
 		*curr_hdr_ptr = -(*curr_hdr_ptr); // mark current chunk as free
@@ -202,9 +214,11 @@ void myfree(void *ptr){
 			*(next_hdr_ptr+1) = *curr_hdr_ptr;  
 		}
 
-		printf("Free (without coalesce) success: ");
-		printf("Neither adjacent chunk was free!\n");
-		printf("---Changed curr_chunk header to have size: %d\n",\
-			*curr_hdr_ptr);
+		if (DEBUG > 0){
+			printf("Free (without coalesce) success: ");
+			printf("Neither adjacent chunk was free!\n");
+			printf("---Changed curr_chunk header to have size: %d\n",\
+				*curr_hdr_ptr);
+		}
 	}
 }

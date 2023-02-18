@@ -4,11 +4,17 @@ CFLAGS = -std=c99 -g -Wall -fsanitize=address,undefined
 run: mymalloc.o err.o
 	$(CC) $(CFLAGS) -o program $^
 
-mymalloc.o: mymalloc.c mymalloc.h
+test: test.o
+	$(CC) $(CFLAGS) -o test $^
+
+test.o: test.c mymalloc.c
 	$(CC) $(CFLAGS) -c $<
+
+mymalloc.o: mymalloc.c mymalloc.h
+	$(CC) -DDEBUG=1 $(CFLAGS) -c $<
 
 err.o: err.c mymalloc.h
 	$(CC) $(CFLAGS) -c $<
 
 clean:
-	rm -f program *.o
+	rm -f program test *.o
