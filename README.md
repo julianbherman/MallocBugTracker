@@ -20,6 +20,14 @@ A Systems Programming Homework
 
 - Maximum capacity of payload: 4080 bytes ~ 4080 chars ~ 1020 integers
 
+## Makefile notice:
+  ### make (default) will run in non-debug mode
+  - To run debug mode, please compile manually using:
+      ```
+        gcc -c mymalloc.c -DDEBUG=1
+        gcc -c err.c
+        gcc -o program mymalloc.o err.o
+      ```
 
 ## Correctness Testing Plan
   - ### What:
