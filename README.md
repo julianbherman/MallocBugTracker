@@ -30,6 +30,14 @@ A Systems Programming Homework
       ```
 
 ## Correctness Testing Plan
+  ### Run Tests:
+  - Use Makefile to run tests:
+  - *tests are not implemented DEBUG mode*
+  ```
+    make test
+    ./test
+  ```
+  
   - ### What:
     - Malloc() preserves unallocated memory
       - #### How:

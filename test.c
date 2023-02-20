@@ -96,13 +96,58 @@ bool test3() {
     return (passed);
 }
 
+bool test4_1() {
+    int* left = (int*) malloc(sizeof(int)*2); // 8bytes
+    int* mid = (int*) malloc(sizeof(int)*2); // 8bytes
+    int* right = (int*) malloc(sizeof(int)*2);
+    free(mid);
+    free(left);
+    int* new_left = (int*) malloc(sizeof(int)*6);
+    bool passed = (new_left - HEADERSIZE*2 == (int*)memory); 
+    //printf("new ptr is: %p \n memory is at: %p \n", new_left, memory);
+    free(new_left);
+    free(right);
+    return (passed);
+}
+bool test4_2() {
+    int* left = (int*) malloc(sizeof(int)*2); // 8bytes
+    int* mid = (int*) malloc(sizeof(int)*2); // 8bytes
+    int* right = (int*) malloc(sizeof(int)*2);
+    free(left);
+    free(mid);
+    int* new_ptr = (int*) malloc(sizeof(int)*6);
+    bool passed = (new_ptr - HEADERSIZE*2 == (int*)memory); 
+    //printf("new ptr is: %p \n memory is at: %p \n", new_ptr, memory);
+    free(new_ptr);
+    free(right);
+    return (passed);
+}
+bool test4_3() {
+    int* left = (int*) malloc(sizeof(int)*2); // 8bytes
+    int* mid = (int*) malloc(sizeof(int)*2); // 8bytes
+    int* right = (int*) malloc(sizeof(int)*2); // 8bytes
+    int* q = (int*) malloc(sizeof(int)*2); // 8bytes
+    free(left);
+    free(right);
+    free(mid);
+    int* new_ptr = (int*) malloc(sizeof(int)*10);
+    bool passed = (new_ptr - HEADERSIZE*2 == (int*)memory); 
+    //printf("new ptr is: %p \n memory is at: %p \n", new_ptr, memory);
+    free(new_ptr);
+    free(q);
+    return (passed);
+}
 int main() {
-    printf(GREEN "TEST 1: Malloc preserves unallocated memory\n" RESET);
+    printf("TEST 1: Malloc preserves unallocated memory\n");
     test1() ? printf(GREEN "PASSED\n" RESET) : printf(RED "FAILED\n" RESET);
-    printf(GREEN "TEST 2: Padding Alignment gives chunks of 8 bytes\n" RESET);
+    printf("TEST 2: Padding Alignment gives chunks of 8 bytes\n");
     test2() ? printf(GREEN "PASSED\n" RESET) : printf(RED "FAILED\n" RESET); 
-    printf(GREEN "TEST 3: Free mark chunk not_in_use\n" RESET);
-    test3() ? printf(GREEN "PASSED\n" RESET) : printf(RED "FAILED\n" RESET);  
+    printf( "TEST 3: Free mark chunk not_in_use\n");
+    test3() ? printf(GREEN "PASSED\n" RESET) : printf(RED "FAILED\n" RESET); 
+    printf("TEST 4: Check Coalesces\n");
+    printf("    ---TEST4.1: on right: "); test4_1() ? printf(GREEN "PASSED\n" RESET) : printf(RED "FAILED\n" RESET);   
+    printf("    ---TEST4.2: on left: "); test4_2() ? printf(GREEN "PASSED\n" RESET) : printf(RED "FAILED\n" RESET);  
+    printf("    ---TEST4.3: on left: "); test4_3() ? printf(GREEN "PASSED\n" RESET) : printf(RED "FAILED\n" RESET);    
     return 0;
 }
 
