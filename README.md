@@ -70,3 +70,10 @@ A Systems Programming Homework
           - free() 1st object and 3rd object
           - Assign 40 bytes object - Called BothSideCoalesce
           - Check if BothSideCoalesce's location is at the beginning of memory  
+    - Coalescing on Memory Fragmentation:
+
+  ### Performance Testing: 
+    #### What:  
+      - Filling up the array and leave 20 bytes at the end
+      Consecutively call malloc at that end-block
+      - 

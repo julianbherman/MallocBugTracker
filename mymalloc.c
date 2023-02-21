@@ -69,7 +69,7 @@ static void createHeader(double* p, int chunk_size, int prev_size){
 static void *allocateChunk(double* p, int size, int curr_chunk_size){
 	*(int*)p = curr_chunk_size;   // mark chunk as in_use: set positive size
 	int extra_space = curr_chunk_size - size;   // calculate leftover space 
-	if ( extra_space >= 1 + HEADERSIZE )   // enough leftover to split?
+	if ( extra_space >= HEADERSIZE )   // enough leftover to split?
 	{	// then split the chunk
 		createHeader(p+HEADERSIZE+size, extra_space-HEADERSIZE, size);
 		*(int*)p = size;   // Change size of current chunk and mark as
