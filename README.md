@@ -1,8 +1,8 @@
 # MallocBugTracker
-CS 214: Systems Programming
-Professor Menendez
-Long Tran (netID: lht21)
-Julian Herman (netID: jbh113)
+CS 214: Systems Programming  
+Professor Menendez  
+Long Tran (netID: lht21)  
+Julian Herman (netID: jbh113)  
 
 #Implementation Details
 
@@ -14,11 +14,11 @@ Julian Herman (netID: jbh113)
   - interpret the header as two contiguous ints (4 bytes each):
     - the first int contains metadata for the current chunk
     - the second int contains metadata for the previous chunk
-      - the absolute value of said int represents the chunk size
-        - an absolute value of 0 represents the start or end of memory
-      - the sign of said int represents whether it is in use
-	- positive meaning it is in use
-        - negative meaning it is NOT in use
+    - the absolute value of said int represents the chunk size
+      - an absolute value of 0 represents the start or end of memory
+    - the sign of said int represents whether it is in use  
+      - positive meaning it is in use
+      - negative meaning it is NOT in use
 - the last 8 bytes of the global memory array remain zero-filled (indicating end of memory)
 - Maximum capacity of payload: 4080 bytes ~ 4080 chars ~ 1020 integers
 
