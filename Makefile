@@ -23,4 +23,4 @@ err.o: err.c mymalloc.h
 	$(CC) $(CFLAGS) -c $<
 
 clean:
-	rm -f program test *.o
+	rm -f program test debug *.o

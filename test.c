@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <assert.h>
 #include "mymalloc.c"
 
 #define RESET   "\033[0m"
@@ -11,7 +12,25 @@
 #define free(p)     myfree(p, __FILE__, __LINE__)
 
 
+bool test0_1(){
+    return false;
+}
+
+bool test0_2(){
+    return false;
+}
+
 bool test1() {
+    int* q = (int*) malloc(sizeof(int)*10);
+    free(q);
+    double* p = (double*) malloc(sizeof(double)*10);
+    //printf("chunk address: %p \n memory address: %p\n", (p-HEADERSIZE), memory);
+    bool passed = ((p - HEADERSIZE) == memory);
+    free(p);
+    return (passed);
+}
+
+bool test2() {
     // Malloc preserves unallocated memory
     int* a = (int*) malloc(sizeof(int) *10);
     int* b = (int*) malloc(sizeof(int) *10);
@@ -60,7 +79,7 @@ bool test1() {
     return !failed;
 }
 
-bool test2(){
+bool test3(){
     char* c1 = (char*) malloc(sizeof(char)*6);
     char* c2 = (char*) malloc(sizeof(char)*4);
     char* c3 = (char*) malloc(sizeof(char)*8);
@@ -86,15 +105,7 @@ bool test2(){
     return !failed;
 }
 
-bool test3() {
-    int* q = (int*) malloc(sizeof(int)*10);
-    free(q);
-    double* p = (double*) malloc(sizeof(double)*10);
-    //printf("chunk address: %p \n memory address: %p\n", (p-HEADERSIZE), memory);
-    bool passed = ((p - HEADERSIZE) == memory);
-    free(p);
-    return (passed);
-}
+
 
 bool test4_1() {
     int* left = (int*) malloc(sizeof(int)*2); // 8bytes
@@ -137,17 +148,42 @@ bool test4_3() {
     free(q);
     return (passed);
 }
+
+bool test5() {
+    int* a = (int*) malloc(sizeof(int)*10);
+    int* b = (int*) malloc(sizeof(int)*10);
+    free(a);
+    int* c = (int*) malloc(sizeof(int)*6);
+    int* d = (int*) malloc(sizeof(int)*10);
+    free(b);
+    int* e = (int*) malloc(sizeof(int)*14);
+
+    // e is pointer of int so e - 8 is minus 32 bytes
+    bool passed = ((e - HEADERSIZE*2 - 8) == (c - HEADERSIZE*2));
+    free(c);
+    free(d);
+    free(e);
+    return passed;
+
+}
+
 int main() {
-    printf("TEST 1: Malloc preserves unallocated memory\n");
+    printf("TEST 0: Singularity Check:\n");
+        printf("    ---TEST0.1: Check if malloc assign first 4 bytes of memory as current chunk size: "); test0_1() ? printf(GREEN "PASSED\n" RESET) : printf(RED "FAILED\n" RESET);   
+        printf("    ---TEST0.2: Check if free mark first 4 bytes of memory as not in use: "); test0_2() ? printf(GREEN "PASSED\n" RESET) : printf(RED "FAILED\n" RESET);   
+    printf("TEST 1: Free mark chunk not_in_use\n");
     test1() ? printf(GREEN "PASSED\n" RESET) : printf(RED "FAILED\n" RESET);
-    printf("TEST 2: Padding Alignment gives chunks of 8 bytes\n");
-    test2() ? printf(GREEN "PASSED\n" RESET) : printf(RED "FAILED\n" RESET); 
-    printf( "TEST 3: Free mark chunk not_in_use\n");
+    printf("TEST 2: Malloc preserves unallocated memory\n");
+    test2() ? printf(GREEN "PASSED\n" RESET) : printf(RED "FAILED\n" RESET);
+    printf("TEST 3: Padding Alignment gives chunks of 8 bytes\n");
     test3() ? printf(GREEN "PASSED\n" RESET) : printf(RED "FAILED\n" RESET); 
     printf("TEST 4: Check Coalesces\n");
     printf("    ---TEST4.1: on right: "); test4_1() ? printf(GREEN "PASSED\n" RESET) : printf(RED "FAILED\n" RESET);   
     printf("    ---TEST4.2: on left: "); test4_2() ? printf(GREEN "PASSED\n" RESET) : printf(RED "FAILED\n" RESET);  
     printf("    ---TEST4.3: on left: "); test4_3() ? printf(GREEN "PASSED\n" RESET) : printf(RED "FAILED\n" RESET);    
+    printf("TEST 5: Check Coalesces on Memory Fragment\n");
+    test5() ? printf(GREEN "PASSED\n" RESET) : printf(RED "FAILED\n" RESET); 
+
     return 0;
 }
 
