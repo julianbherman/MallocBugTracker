@@ -110,7 +110,7 @@ void *mymalloc(int size, char* file, int line){
 		p += HEADERSIZE + curr_chunk_size;   // shift to next chunk
 	}
 
-	printf(RED "ERROR IN FILE [%s]\nLINE %d\nNo space in memory\n" RESET, file, line);
+	printf(RED "Malloc Failed!!! No space in memory [%s], line %d\n" RESET, file, line);
 	return NULL;
 }
 
@@ -134,7 +134,7 @@ void myfree(void *ptr, char* file, int line){
 
 	if ( !ptrValid(ptr) )	// if the ptr was not created by mymalloc()
 	{
-		printf(RED "ERROR IN FILE [%s]\nLINE %d\nPointer not valid to be freed!\n" RESET, file, line);
+		printf(RED "Free failed!!! Pointer not valid to be freed! [%s], line %d\n" RESET, file, line);
 		return;
 	}
 	// ptr WAS created by mymalloc(), proceed to free it

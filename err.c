@@ -5,8 +5,7 @@
 
 int main(int argc, char **argv)
 {
-    int x, *p, *r, *q;
-    char* c;
+    int x, *p, *q;
     int test = argc > 1 ? atoi(argv[1]) : 0;
     
     switch (test) {
@@ -30,42 +29,6 @@ int main(int argc, char **argv)
         break;
 
     case 4:
-        //Normal malloc testing
-        p = (int *) malloc(sizeof(int) * 10);
-        printf("Malloc succeeded\nAssigning values for array\n");
-
-        int i;
-        int* ptr = p;
-        // Assigning p[i] = i
-        for (i = 0; i < 10; i++)
-        { *ptr++ = i; }
-
-        // print out values of p[i]s
-        for (i = 0; i < 10; i++)
-            printf("Value of index %d is: %d \n", i, *(p+i));
-
-        free(p);
-
-        // Print values after free
-        printf("p after free: \n");
-        printf("is header freed? %s \n", (*(p - 2) < 0)? "true" : "false");
-        break;
-
-    case 5:
-        p = (int*) malloc(sizeof(int) * 10);
-        free(p);
-        q = (int*) malloc(sizeof(int) * 1020); 
-	    break;
-
-    case 6:
-        p = (int*) malloc(sizeof(int) * 100);
-            q = (int*) malloc(sizeof(int) * 100); 
-        free(p);
-        r = (int*) malloc(sizeof(int) * 100);
-        free(q);
-        free(r);
-        break;
-    case 7:
         // buffing a few times of malloc & free
         // EXPECTED SUCCESS
         p = (int*) malloc(sizeof(int) * 10);
@@ -76,20 +39,10 @@ int main(int argc, char **argv)
         p = (int*) malloc(sizeof(int) * 509);
         q = (int*) malloc(sizeof(int) * 509); 
         break;
-    case 8:
-        // Chars testing
-        // EXPECTED SUCCESS
-        c = (char*) malloc(sizeof(char) *20);
-        // write to c
-        for (i = 0; i < 20; i++)
-            c[i] = 'a'+i;
-
-        //print from c
-        for (i = 0; i < 20; i++)
-            printf("%c  ", c[i]);
-        printf("\n");
-        free(c);
-        free(c);
+    case 5:
+        q = (int*) malloc(sizeof(int) * 1020); 
+        free(q + 2);
+        free(q);
         break;
     }
 
