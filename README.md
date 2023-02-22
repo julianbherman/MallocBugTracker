@@ -4,11 +4,10 @@ Professor Menendez
 Long Tran (netID: lht21)  
 Julian Herman (netID: jbh113)  
 
-#Implementation Details
+# Implementation Details
 
 - alignment to 8 bytes is guaranteed
-- each chunks' metadata contains information about itself and the previous chunk
-  - basically a doubly-linked-list
+- each chunks' metadata contains information about itself and the previous chunk (basically a doubly-linked-list)
 - structuring of metadata/header:
   - each header size is 8 bytes
   - interpret the header as two contiguous ints (4 bytes each):
