@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
-#include <assert.h>
 #include "mymalloc.c"
 
 #define RESET   "\033[0m"

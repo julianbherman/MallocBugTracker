@@ -7,6 +7,9 @@ run: mymalloc.o err.o
 debug: mymalloc-debug.o err.o
 	$(CC) $(CFLAGS) -o $@ $^
 
+memgrind: memgrind.o mymalloc.o
+	$(CC) $(CFLAGS) -o $@ $^
+
 test: test.o
 	$(CC) $(CFLAGS) -o test $^
 
@@ -22,5 +25,8 @@ mymalloc-debug.o: mymalloc.c mymalloc.h
 err.o: err.c mymalloc.h
 	$(CC) $(CFLAGS) -c $<
 
+memgrind.o: memgrind.c mymalloc.h
+	$(CC) $(CFLAGS) -c $<	
+
 clean:
-	rm -f program test debug *.o
+	rm -f program test debug memgrind *.o
