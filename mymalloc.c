@@ -130,7 +130,74 @@ static bool ptrValid(void *ptr){
 	return false;	// ptr is NOT valid!
 }
 
-void myfree(void *ptr, char* file, int line){
+/* Given block 'ptr' is FREE and the block to the left AND right of
+ * 'ptr' are also BOTH FREE (this function is only called in this
+ * scenario): coalesce all 3 contiguous blocks into one block marked as FREE */
+void coalesce_with_both(double* ptr, int* hdr_ptr, int* rht_hdr_ptr){
+	// update left_chunk
+	int jump_amount = HEADERSIZE + abs(*(hdr_ptr+1));
+	int* lft_hdr_ptr = (int*)(ptr - jump_amount - HEADERSIZE);
+	*lft_hdr_ptr = -jump_amount - *hdr_ptr + *rht_hdr_ptr - HEADERSIZE;
+
+	// update right_of_right_chunk
+	jump_amount = *hdr_ptr + HEADERSIZE + abs(*rht_hdr_ptr);
+	int* rht_of_rht_hdr_ptr = (int*)(ptr + jump_amount);
+	if ( *rht_of_rht_hdr_ptr )// rht_of_rht_hdr_ptr is IN BOUNDS
+	{
+		*(rht_of_rht_hdr_ptr+1) = *lft_hdr_ptr;
+	}
+
+	if (DEBUG > 0){
+		printf("Free (with coalesce) success: ");
+		printf("Both prev_chunk and next_chunk were free!\n");
+		printf("---Changed prev_chunk header to have size: %d\n", *lft_hdr_ptr);
+	}
+}
+
+/* Given block 'ptr' is FREE and the block to the left of 'ptr' is also FREE
+ * (this function is only called in this scenario): coalesce both contiguous
+ * blocks into one block marked as FREE */
+void coalesce_with_left(double* ptr, int* hdr_ptr, int* rht_hdr_ptr){
+	// update left_chunk
+	int jump_amount = HEADERSIZE + abs(*(hdr_ptr+1));
+	int* lft_hdr_ptr = (int*)(ptr - jump_amount - HEADERSIZE);
+	*lft_hdr_ptr = -jump_amount - *hdr_ptr;
+
+	// update right_chunk
+	if ( *rht_hdr_ptr )	// rht_hdr_ptr is IN BOUNDS OF MEM
+	{
+		*(rht_hdr_ptr+1) = *lft_hdr_ptr;
+	}
+
+	if (DEBUG > 0){
+		printf("Free (with coalesce) success: ");
+		printf("Only the prev_chunk was free!\n");
+		printf("---Changed prev_chunk header to have size: %d\n", *lft_hdr_ptr);
+	}
+}
+
+/* Given block 'ptr' is FREE and the block to the right of 'ptr' is also FREE
+ * (this function is only called in this scenario): coalesce both contiguous
+ * blocks into one block marked as FREE */
+void coalesce_with_right(double* ptr, int* hdr_ptr, int* rht_hdr_ptr){
+	// update ptr_chunk
+	*hdr_ptr = -*hdr_ptr - HEADERSIZE + *rht_hdr_ptr;
+
+	// update rht_of_rht_chunk
+	int* rht_of_rht_hdr_ptr = (int*)(ptr + abs(*hdr_ptr));
+	if ( *rht_of_rht_hdr_ptr )// rht_of_rht_hdr_ptr is IN BOUNDS OF MEM
+	{
+		*(rht_of_rht_hdr_ptr+1) = *hdr_ptr;
+	}
+
+	if (DEBUG > 0){
+		printf("Free (with coalesce) success: ");
+		printf("Only the next_chunk was free!\n");
+		printf("---Changed curr_chunk header to have size: %d\n", *hdr_ptr);
+	}
+}
+
+void myfree(void* ptr, char* file, int line){
 
 	if ( !ptrValid(ptr) )	// if the ptr was not created by mymalloc()
 	{
@@ -145,67 +212,16 @@ void myfree(void *ptr, char* file, int line){
 	//printf("next_hdr_ptr: %p\n", next_hdr_ptr);
 
 	if ( (*(curr_hdr_ptr+1) < 0) && (*next_hdr_ptr < 0) )
-		// prev_chunk and next_chunk are both free and IN BOUNDS OF MEM
-	{
-		// update prev_chunk
-		int jump_amount = HEADERSIZE + abs(*(curr_hdr_ptr+1));
-		int* prev_hdr_ptr = (int*)(curr_ptr - jump_amount - HEADERSIZE);
-		*prev_hdr_ptr = -jump_amount - *curr_hdr_ptr + 
-				*next_hdr_ptr - HEADERSIZE;
-
-		// update next_next_chunk
-		jump_amount = *curr_hdr_ptr + HEADERSIZE + abs(*next_hdr_ptr);
-		int* next_next_hdr_ptr = (int*)(curr_ptr + jump_amount);
-		if ( *next_next_hdr_ptr )// next_next_hdr_ptr is IN BOUNDS
-		{
-			*(next_next_hdr_ptr+1) = *prev_hdr_ptr;
-		}
-
-		if (DEBUG > 0){
-			printf("Free (with coalesce) success: ");
-			printf("Both prev_chunk and next_chunk were free!\n");
-			printf("---Changed prev_chunk header to have size: %d\n",\
-				*prev_hdr_ptr);
-		}
-
-	} else if (*(curr_hdr_ptr+1) < 0) {// prev_chunk is free and NOT START 
-		// update prev_chunk
-		int jump_amount = HEADERSIZE + abs(*(curr_hdr_ptr+1));
-		int* prev_hdr_ptr = (int*)(curr_ptr - jump_amount - HEADERSIZE);
-		*prev_hdr_ptr = -jump_amount - *curr_hdr_ptr;
-
-		// update next_chunk
-		if ( *next_hdr_ptr )	// next_hdr_ptr is IN BOUNDS OF MEM
-		{
-			*(next_hdr_ptr+1) = *prev_hdr_ptr;
-		}
-		
-		if (DEBUG > 0){
-			printf("Free (with coalesce) success: ");
-			printf("Only the prev_chunk was free!\n");
-			printf("---Changed prev_chunk header to have size: %d\n",\
-				*prev_hdr_ptr);
-		}
-
-	} else if (*next_hdr_ptr < 0) {// next_chunk is free and NOT END 
-		// update curr_chunk
-		*curr_hdr_ptr = -*curr_hdr_ptr - HEADERSIZE + *next_hdr_ptr;
-		
-		// update next_next_chunk
-		int* next_next_hdr_ptr = (int*)(curr_ptr + abs(*curr_hdr_ptr));
-		if ( *next_next_hdr_ptr )// next_next_hdr_ptr is IN BOUNDS
-		{
-			*(next_next_hdr_ptr+1) = *curr_hdr_ptr;
-		}
-
-		if (DEBUG > 0){
-			printf("Free (with coalesce) success: ");
-			printf("Only the next_chunk was free!\n");
-			printf("---Changed curr_chunk header to have size: %d\n",\
-				*curr_hdr_ptr);
-		}
-
-	} else {   // neither prev_chunk or next_chunk are free
+	{	// prev_chunk and next_chunk are both free and IN BOUNDS OF MEM
+		coalesce_with_both( curr_ptr, curr_hdr_ptr, next_hdr_ptr );
+	} else if (*(curr_hdr_ptr+1) < 0)
+	{	// prev_chunk is free and NOT START 
+		coalesce_with_left( curr_ptr, curr_hdr_ptr, next_hdr_ptr );
+	} else if (*next_hdr_ptr < 0)
+	{	// next_chunk is free and NOT END 
+		coalesce_with_right( curr_ptr, curr_hdr_ptr, next_hdr_ptr );
+	} else {
+		// neither prev_chunk or next_chunk are free: no coalescing
 		*curr_hdr_ptr = -(*curr_hdr_ptr); // mark current chunk as free
  
 		// update next_chunk
@@ -217,8 +233,7 @@ void myfree(void *ptr, char* file, int line){
 		if (DEBUG > 0){
 			printf("Free (without coalesce) success: ");
 			printf("Neither adjacent chunk was free!\n");
-			printf("---Changed curr_chunk header to have size: %d\n",\
-				*curr_hdr_ptr);
+			printf("---Changed curr_chunk header to have size: %d\n", *curr_hdr_ptr);
 		}
 	}
 }
