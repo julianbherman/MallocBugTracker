@@ -4,8 +4,8 @@ Professor Menendez
 Long Tran (netID: lht21)  
 Julian Herman (netID: jbh113)  
 
-## Makefile notice:
-  ### make (default) will run in non-debug mode
+## Makefile Intructions
+  ### 'make' (default) will run in non-debug mode
   - To run debug mode, please compile manually using:
       ```
         gcc -c mymalloc.c -DDEBUG=1
@@ -16,19 +16,21 @@ Julian Herman (netID: jbh113)
 ## Implementation Details
 
 - alignment to 8 bytes is guaranteed
-- each chunks' metadata contains information about itself and the previous chunk (basically a doubly-linked-list)
+- each chunks' metadata contains information about itself and the previous chunk (essentially a doubly-linked-list)
 - structuring of metadata/header:
   - each header size is 8 bytes
   - interpret the header as two contiguous ints (4 bytes each):
     - the first int contains metadata for the current chunk
     - the second int contains metadata for the previous chunk
-    - the absolute value of said int represents the chunk size
+    - the absolute value of said int represents the corresponding chunk size
       - an absolute value of 0 represents the start or end of memory
-    - the sign of said int represents whether it is in use  
+    - the sign of said int represents whether the corresponding chunk is in use
       - positive meaning it is in use
       - negative meaning it is NOT in use
 - the last 8 bytes of the global memory array remain zero-filled (indicating end of memory)
-- Maximum capacity of payload: 4080 bytes ~ 4080 chars ~ 1020 integers
+- maximum capacity of payload: 4080 bytes ~ 4080 chars ~ 1020 integers (assuming the macro "memsize" is set to "512" quadwords ~ 4096 bytes)
+    - this is because this implementation reserves 8 bytes for the initial header (when there is only one chunk) and 8 bytes at the end of the array to mark memory end -> 4096-(8+8)=4080
+
 
 
 ## Correctness Testing Plan
