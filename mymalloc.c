@@ -89,14 +89,16 @@ void *mymalloc(size_t size, char* file, int line){
 	}       
 	// chunk is in use or doesn't have sufficient size
 	if (DEBUG > 0) {
-	    printf("scanning memory!\nseeking size >= %d\ncurrent chunk in use: %d\npayload size of: %d quadwords\n", padded_size, in_use, curr_chunk_size);
+	    printf("scanning memory!\nseeking size >= %d\n", padded_size);
+	    printf("current chunk in use: %d\n", in_use);
+	    printf("payload size of: %d quadwords\n", curr_chunk_size);
 	    printf("metadata at: %p\npayload at: %p\n", p, (p+1));
 	    printf("moving on to the next chunk!\n\n");
 	}
 	p += HEADERSIZE + curr_chunk_size; // shift to next chunk
     }
 
-    printf(RED "Malloc Failed!!! No space in memory [%s], line %d\n" RESET, file, line);
+    printf(RED "[%s:%d] malloc failed: no space in memory!\n" RESET, file, line);
     return NULL;
 }
 
@@ -113,13 +115,13 @@ static bool ptr_valid(void* ptr, char* file, int line){
 		return true; // ptr is valid!
 	    } else {
 		// curr_chunk has same address but is already free
-		printf(RED "Free failed: the pointer was already freed! [%s], line %d\n" RESET, file, line);
+		printf(RED "[%s:%d] free failed: the pointer was already freed!\n" RESET, file, line);
 		return false; // ptr is NOT valid!
 	    }
 	}
 	p += HEADERSIZE + abs(*(int*)p); // increment p
     }
-    printf(RED "Free failed: the pointer was not provided by malloc! [%s], line %d\n" RESET, file, line);
+    printf(RED "[%s:%d] free failed: the pointer was not provided by malloc!\n" RESET, file, line);
     return false; // ptr is NOT valid!
 }
 
@@ -143,7 +145,8 @@ void coalesce_with_both(double* ptr, int* hdr_ptr, int* rht_hdr_ptr){
     if (DEBUG > 0){
 	printf("Free (with coalesce) success: ");
 	printf("Both prev_chunk and next_chunk were free!\n");
-	printf("---Changed prev_chunk header to have size: %d\n\n", *lft_hdr_ptr);
+	printf("---Changed prev_chunk header to have size: %d\n\n", \
+		*lft_hdr_ptr);
     }
 }
 
@@ -165,7 +168,8 @@ void coalesce_with_left(double* ptr, int* hdr_ptr, int* rht_hdr_ptr){
     if (DEBUG > 0){
 	printf("Free (with coalesce) success: ");
 	printf("Only the prev_chunk was free!\n");
-	printf("---Changed prev_chunk header to have size: %d\n\n", *lft_hdr_ptr);
+	printf("---Changed prev_chunk header to have size: %d\n\n", \
+		*lft_hdr_ptr);
     }
 }
 
@@ -191,8 +195,7 @@ void coalesce_with_right(double* ptr, int* hdr_ptr, int* rht_hdr_ptr){
 }
 
 void myfree(void* ptr, char* file, int line){
-
-    if ( !ptr_valid(ptr, file, line) ) // if the ptr was not created by mymalloc()
+    if ( !ptr_valid(ptr, file, line) ) // if the ptr was not created by mymalloc
     {
 	return;
     }
@@ -225,7 +228,8 @@ void myfree(void* ptr, char* file, int line){
 	if (DEBUG > 0){
 	    printf("Free (without coalesce) success: ");
 	    printf("Neither adjacent chunk was free!\n");
-	    printf("---Changed curr_chunk header to have size: %d\n\n", *curr_hdr_ptr);
+	    printf("---Changed curr_chunk header to have size: %d\n\n", \
+		    *curr_hdr_ptr);
 	}
     }
 }
