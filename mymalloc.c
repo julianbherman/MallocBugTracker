@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-// #include "mymalloc.h"
+#include "mymalloc.h"
 
 #define MEMSIZE 512	// capacity is 512 QUADWORDS = 4096 BYTES
 #define HEADERSIZE 1   // header is 1 QUADWORD = 8 BYTES
@@ -11,229 +11,225 @@
 #define DEBUG 0
 #endif
 
-
-/* !!! NEW IMPLEMENTATION !!!
- * -last 8 bytes of memory are all 0 indicating end of memory
- * -alignment to 8 bytes is guaranteed
- * -restructuring of metadata/header:
- *  --header size is 8 bytes
- *  --splitting the header into two ints (4 bytes each):
- *    --FIRST int (data for the current chunk):
- *      --the absolute value represents current chunk size
- *      --the sign represents whether it's in_use
- *        --(negative meaning NOT in_use, positive meaning in_use)
- *    --SECOND int (data for the previous chunk):
- *	--the absolute value represents previous chunk size
- *      --the sign represents whether it's in_use
- *        --(negative meaning NOT in_use, positive meaning in_use)
- */
-
 static double memory[MEMSIZE];
 
 /* returns the number of multiples of 8 required to achieve a value >= num */
 static int padForAlign(int num){
-	if ( num < 8 ) { return 1; };
-	int remainder = num%8;
-	if (!remainder) { return num/8; }	// num is a mutiple of 8
-	return num/8 + 1;
+    if ( num < 8 ) { return 1; };
+    int remainder = num%8;
+    if (!remainder) { return num/8; } // num is a mutiple of 8
+    return num/8 + 1;
 }
 
 /* initializes memory (if not already done so) to the whole block */
 static void memoryInit(){
-	int* ptr = (int*)memory;
-	if ( abs(*ptr) == 0 )	// chunk size = 0 -> memory is unitialized
-	{	// init chunk size to entire memory
-		*ptr = -(MEMSIZE - 2*HEADERSIZE); // negative means in_use=FALSE
-		// NOTE: prev_bloc_size = 0 (memory starts)
-		// and the last 8 bytes are 0 (memory ends)
-	}
+    int* ptr = (int*)memory;
+    if ( abs(*ptr) == 0 ) // chunk size = 0 -> memory is unitialized
+    {	// init chunk size to entire memory
+	*ptr = -(MEMSIZE - 2*HEADERSIZE); // negative means in_use=FALSE
+	// NOTE: prev_bloc_size = 0 (memory starts)
+	// and the last 8 bytes are 0 (memory ends)
+    }
 }
 
 /* create a header for a free (NOT in_use) chunk of specified size */
 static void createHeader(double* p, int chunk_size, int prev_size){
-	int* ptr = (int*)p;
-	*ptr = -chunk_size;		// chunk is NOT in_use
-	*(ptr+1) = prev_size;		// store size of prev_chunk
-					// NOTE: prev_chunk is in_use
-	p += HEADERSIZE + chunk_size;	     	
-	if ( *(int*)p )			// if next chunk isn't the end of memory
-	{
-		ptr = (int*)p;		// store size of prev_chunk       	
-		*(ptr+1) = -chunk_size; // NOTE: prev_chunk NOT in_use    	
-	}
+    int* ptr = (int*)p;
+    *ptr = -chunk_size;		// chunk is NOT in_use
+    *(ptr+1) = prev_size;	// store size of prev_chunk
+				// NOTE: prev_chunk is in_use
+    p += HEADERSIZE + chunk_size;	     	
+    if ( *(int*)p )		// if next chunk isn't the end of memory
+    {
+	ptr = (int*)p;		// store size of prev_chunk       	
+	*(ptr+1) = -chunk_size; // NOTE: prev_chunk NOT in_use    	
+    }
 }
 
 /* determine whether to split into two chunks: one in_use and one NOT in_use
  * OR to leave the size as is (already determined to be sufficient)
  * AND in either case, update the header approriately */
 static void *allocateChunk(double* p, int size, int curr_chunk_size){
-	*(int*)p = curr_chunk_size;   // mark chunk as in_use: set positive size
-	int extra_space = curr_chunk_size - size;   // calculate leftover space 
-	if ( extra_space >= HEADERSIZE )   // enough leftover to split?
-	{	// then split the chunk
-		createHeader(p+HEADERSIZE+size, extra_space-HEADERSIZE, size);
-		*(int*)p = size;   // Change size of current chunk and mark as
-				   // in_use (size is positive)
-	} else {	// if not splitting, update next chunk header if safe
-		int* next_hdr_ptr = (int*)(p + HEADERSIZE + curr_chunk_size);
-		if ( *next_hdr_ptr ) { *(next_hdr_ptr+1) = curr_chunk_size; }
-	}
-	// not enough space to split chunk, then leave the size as is (wasteful)
-	// wastes a max of ~(15 bytes + initial padding of size) per each chunk
-	if (DEBUG > 0) printf("Chunk allocated!\n---Payload at: %p\n", (p+HEADERSIZE));
-	return (void*)(p + HEADERSIZE);
+    *(int*)p = curr_chunk_size; // mark chunk as in_use: set positive size
+    int extra_space = curr_chunk_size - size; // calculate leftover space 
+    if ( extra_space >= HEADERSIZE ) // enough leftover to split?
+    {	// then split the chunk
+	createHeader(p+HEADERSIZE+size, extra_space-HEADERSIZE, size);
+	// Change size of current chunk and mark as in_use (size is positive)
+	*(int*)p = size;   
+    } else { // if not splitting, update next chunk header if safe
+	int* next_hdr_ptr = (int*)(p + HEADERSIZE + curr_chunk_size);
+	if ( *next_hdr_ptr ) { *(next_hdr_ptr+1) = curr_chunk_size; }
+    }
+    // not enough space to split chunk, then leave the size as is (wasteful)
+    // wastes a max of ~(15 bytes + initial padding of size) per each chunk
+    if (DEBUG > 0) {
+	printf("Chunk allocated!\n---Payload at: %p\n\n", (p+HEADERSIZE));
+    }
+    return (void*)(p + HEADERSIZE);
 }
 
-void *mymalloc(int size, char* file, int line){
-	if ( !size ) { return NULL; }	// size is 0
+void *mymalloc(size_t size, char* file, int line){
+    if ( !size ) { return NULL; } // size is 0
 
-	double* p = memory;
-	memoryInit();	// check if memory has been initialized
-	int padded_size = padForAlign(size);
+    double* p = memory;
+    memoryInit(); // check if memory has been initialized
+    int padded_size = padForAlign(size);
 
-	while ( *(int*)p )
-	{	// if positive, the chunk is currently in_use
-		bool in_use = (*(int*)p) > 0;	
+    while ( *(int*)p )
+    {	// if positive, the chunk is currently in_use
+	bool in_use = (*(int*)p) > 0;	
 
-		// size of current chunk = absolute value
-		int curr_chunk_size = abs(*(int*)p);	
+	// size of current chunk = absolute value
+	int curr_chunk_size = abs(*(int*)p);	
 
-		if ( !in_use && (curr_chunk_size >= padded_size) )
-			// chunk NOT in_use and has sufficient size 
-		{
-			return allocateChunk(p, padded_size, curr_chunk_size);
-		}       
-		// chunk is in use or doesn't have sufficient size
-		//printf("Chunk in use: %d\nPayload size of: %d quadwords\n",
-		//		in_use, curr_chunk_size);
-		//printf("Metadata at: %p\nPayload at: %p\n\n", p, (p+1));
-		p += HEADERSIZE + curr_chunk_size;   // shift to next chunk
+	if ( !in_use && (curr_chunk_size >= padded_size) )
+	{   // chunk NOT in_use and has sufficient size 
+	    return allocateChunk(p, padded_size, curr_chunk_size);
+	}       
+	// chunk is in use or doesn't have sufficient size
+	if (DEBUG > 0) {
+	    printf("scanning memory!\nseeking size >= %d\n", padded_size);
+	    printf("current chunk in use: %d\n", in_use);
+	    printf("payload size of: %d quadwords\n", curr_chunk_size);
+	    printf("metadata at: %p\npayload at: %p\n", p, (p+1));
+	    printf("moving on to the next chunk!\n\n");
 	}
+	p += HEADERSIZE + curr_chunk_size; // shift to next chunk
+    }
 
-	printf(RED "Malloc Failed!!! No space in memory [%s], line %d\n" RESET, file, line);
-	return NULL;
+    printf(RED "[%s:%d] malloc failed: no space in memory!\n" RESET, file, line);
+    return NULL;
 }
 
 /* returns true if ptr was generated by mymalloc(), false otherwise */
-static bool ptrValid(void *ptr){
-	double* p = memory;
+static bool ptr_valid(void* ptr, char* file, int line){
+    double* p = memory;
 
-	while ( *(int*)p )
-	{
-		if ( (*(int*)p) > 0 && ((void*)(p+HEADERSIZE) == ptr) )
-		// curr_chunk is in_use and has the same address of given ptr
-		{
-			return true;	// ptr is valid!
-		}
-		p += HEADERSIZE + abs(*(int*)p);	// increment p
+    while ( *(int*)p )
+    {
+	if ( (void*)(p+HEADERSIZE) == ptr ){
+	    // curr_chunk has the same address of given ptr
+	    if ( (*(int*)p) > 0 ) {
+		// curr_chunk is in_use
+		return true; // ptr is valid!
+	    } else {
+		// curr_chunk has same address but is already free
+		printf(RED "[%s:%d] free failed: the pointer was already freed!\n" RESET, file, line);
+		return false; // ptr is NOT valid!
+	    }
 	}
-	return false;	// ptr is NOT valid!
+	p += HEADERSIZE + abs(*(int*)p); // increment p
+    }
+    printf(RED "[%s:%d] free failed: the pointer was not provided by malloc!\n" RESET, file, line);
+    return false; // ptr is NOT valid!
 }
 
 /* Given block 'ptr' is FREE and the block to the left AND right of
  * 'ptr' are also BOTH FREE (this function is only called in this
  * scenario): coalesce all 3 contiguous blocks into one block marked as FREE */
 void coalesce_with_both(double* ptr, int* hdr_ptr, int* rht_hdr_ptr){
-	// update left_chunk
-	int jump_amount = HEADERSIZE + abs(*(hdr_ptr+1));
-	int* lft_hdr_ptr = (int*)(ptr - jump_amount - HEADERSIZE);
-	*lft_hdr_ptr = -jump_amount - *hdr_ptr + *rht_hdr_ptr - HEADERSIZE;
+    // update left_chunk
+    int jump_amount = HEADERSIZE + abs(*(hdr_ptr+1));
+    int* lft_hdr_ptr = (int*)(ptr - jump_amount - HEADERSIZE);
+    *lft_hdr_ptr = -jump_amount - *hdr_ptr + *rht_hdr_ptr - HEADERSIZE;
 
-	// update right_of_right_chunk
-	jump_amount = *hdr_ptr + HEADERSIZE + abs(*rht_hdr_ptr);
-	int* rht_of_rht_hdr_ptr = (int*)(ptr + jump_amount);
-	if ( *rht_of_rht_hdr_ptr )// rht_of_rht_hdr_ptr is IN BOUNDS
-	{
-		*(rht_of_rht_hdr_ptr+1) = *lft_hdr_ptr;
-	}
+    // update right_of_right_chunk
+    jump_amount = *hdr_ptr + HEADERSIZE + abs(*rht_hdr_ptr);
+    int* rht_of_rht_hdr_ptr = (int*)(ptr + jump_amount);
+    if ( *rht_of_rht_hdr_ptr )// rht_of_rht_hdr_ptr is IN BOUNDS
+    {
+	*(rht_of_rht_hdr_ptr+1) = *lft_hdr_ptr;
+    }
 
-	if (DEBUG > 0){
-		printf("Free (with coalesce) success: ");
-		printf("Both prev_chunk and next_chunk were free!\n");
-		printf("---Changed prev_chunk header to have size: %d\n", *lft_hdr_ptr);
-	}
+    if (DEBUG > 0){
+	printf("Free (with coalesce) success: ");
+	printf("Both prev_chunk and next_chunk were free!\n");
+	printf("---Changed prev_chunk header to have size: %d\n\n", \
+		*lft_hdr_ptr);
+    }
 }
 
 /* Given block 'ptr' is FREE and the block to the left of 'ptr' is also FREE
  * (this function is only called in this scenario): coalesce both contiguous
  * blocks into one block marked as FREE */
 void coalesce_with_left(double* ptr, int* hdr_ptr, int* rht_hdr_ptr){
-	// update left_chunk
-	int jump_amount = HEADERSIZE + abs(*(hdr_ptr+1));
-	int* lft_hdr_ptr = (int*)(ptr - jump_amount - HEADERSIZE);
-	*lft_hdr_ptr = -jump_amount - *hdr_ptr;
+    // update left_chunk
+    int jump_amount = HEADERSIZE + abs(*(hdr_ptr+1));
+    int* lft_hdr_ptr = (int*)(ptr - jump_amount - HEADERSIZE);
+    *lft_hdr_ptr = -jump_amount - *hdr_ptr;
 
-	// update right_chunk
-	if ( *rht_hdr_ptr )	// rht_hdr_ptr is IN BOUNDS OF MEM
-	{
-		*(rht_hdr_ptr+1) = *lft_hdr_ptr;
-	}
+    // update right_chunk
+    if ( *rht_hdr_ptr )	// rht_hdr_ptr is IN BOUNDS OF MEM
+    {
+	*(rht_hdr_ptr+1) = *lft_hdr_ptr;
+    }
 
-	if (DEBUG > 0){
-		printf("Free (with coalesce) success: ");
-		printf("Only the prev_chunk was free!\n");
-		printf("---Changed prev_chunk header to have size: %d\n", *lft_hdr_ptr);
-	}
+    if (DEBUG > 0){
+	printf("Free (with coalesce) success: ");
+	printf("Only the prev_chunk was free!\n");
+	printf("---Changed prev_chunk header to have size: %d\n\n", \
+		*lft_hdr_ptr);
+    }
 }
 
 /* Given block 'ptr' is FREE and the block to the right of 'ptr' is also FREE
  * (this function is only called in this scenario): coalesce both contiguous
  * blocks into one block marked as FREE */
 void coalesce_with_right(double* ptr, int* hdr_ptr, int* rht_hdr_ptr){
-	// update ptr_chunk
-	*hdr_ptr = -*hdr_ptr - HEADERSIZE + *rht_hdr_ptr;
+    // update ptr_chunk
+    *hdr_ptr = -*hdr_ptr - HEADERSIZE + *rht_hdr_ptr;
 
-	// update rht_of_rht_chunk
-	int* rht_of_rht_hdr_ptr = (int*)(ptr + abs(*hdr_ptr));
-	if ( *rht_of_rht_hdr_ptr )// rht_of_rht_hdr_ptr is IN BOUNDS OF MEM
-	{
-		*(rht_of_rht_hdr_ptr+1) = *hdr_ptr;
-	}
+    // update rht_of_rht_chunk
+    int* rht_of_rht_hdr_ptr = (int*)(ptr + abs(*hdr_ptr));
+    if ( *rht_of_rht_hdr_ptr )// rht_of_rht_hdr_ptr is IN BOUNDS OF MEM
+    {
+	*(rht_of_rht_hdr_ptr+1) = *hdr_ptr;
+    }
 
-	if (DEBUG > 0){
-		printf("Free (with coalesce) success: ");
-		printf("Only the next_chunk was free!\n");
-		printf("---Changed curr_chunk header to have size: %d\n", *hdr_ptr);
-	}
+    if (DEBUG > 0){
+	printf("Free (with coalesce) success: ");
+	printf("Only the next_chunk was free!\n");
+	printf("---Changed curr_chunk header to have size: %d\n\n", *hdr_ptr);
+    }
 }
 
 void myfree(void* ptr, char* file, int line){
+    if ( !ptr_valid(ptr, file, line) ) // if the ptr was not created by mymalloc
+    {
+	return;
+    }
+    // ptr WAS created by mymalloc(), proceed to free it
+    double* curr_ptr = (double*)ptr;
+    int* curr_hdr_ptr = (int*)(curr_ptr-HEADERSIZE);
 
-	if ( !ptrValid(ptr) )	// if the ptr was not created by mymalloc()
-	{
-		printf(RED "Free failed!!! Pointer not valid to be freed! [%s], line %d\n" RESET, file, line);
-		return;
+    int* next_hdr_ptr = (int*)(curr_ptr + *curr_hdr_ptr);
+    //printf("next_hdr_ptr: %p\n", next_hdr_ptr);
+
+    if ( (*(curr_hdr_ptr+1) < 0) && (*next_hdr_ptr < 0) )
+    {	// prev_chunk and next_chunk are both free and IN BOUNDS OF MEM
+	coalesce_with_both( curr_ptr, curr_hdr_ptr, next_hdr_ptr );
+    } else if (*(curr_hdr_ptr+1) < 0)
+    {	// prev_chunk is free and NOT START 
+	coalesce_with_left( curr_ptr, curr_hdr_ptr, next_hdr_ptr );
+    } else if (*next_hdr_ptr < 0)
+    {	// next_chunk is free and NOT END 
+	coalesce_with_right( curr_ptr, curr_hdr_ptr, next_hdr_ptr );
+    } else {
+	// neither prev_chunk or next_chunk are free: no coalescing
+	*curr_hdr_ptr = -(*curr_hdr_ptr); // mark current chunk as free
+
+	// update next_chunk
+	if ( *next_hdr_ptr ) // next_hdr_ptr is IN BOUNDS OF MEM
+	{   // mark current chunk as free in header of next_chunk
+	    *(next_hdr_ptr+1) = *curr_hdr_ptr;  
 	}
-	// ptr WAS created by mymalloc(), proceed to free it
-	double* curr_ptr = (double*)ptr;
-	int* curr_hdr_ptr = (int*)(curr_ptr-HEADERSIZE);
 
-	int* next_hdr_ptr = (int*)(curr_ptr + *curr_hdr_ptr);
-	//printf("next_hdr_ptr: %p\n", next_hdr_ptr);
-
-	if ( (*(curr_hdr_ptr+1) < 0) && (*next_hdr_ptr < 0) )
-	{	// prev_chunk and next_chunk are both free and IN BOUNDS OF MEM
-		coalesce_with_both( curr_ptr, curr_hdr_ptr, next_hdr_ptr );
-	} else if (*(curr_hdr_ptr+1) < 0)
-	{	// prev_chunk is free and NOT START 
-		coalesce_with_left( curr_ptr, curr_hdr_ptr, next_hdr_ptr );
-	} else if (*next_hdr_ptr < 0)
-	{	// next_chunk is free and NOT END 
-		coalesce_with_right( curr_ptr, curr_hdr_ptr, next_hdr_ptr );
-	} else {
-		// neither prev_chunk or next_chunk are free: no coalescing
-		*curr_hdr_ptr = -(*curr_hdr_ptr); // mark current chunk as free
- 
-		// update next_chunk
-		if ( *next_hdr_ptr )	// next_hdr_ptr is IN BOUNDS OF MEM
-		{	// mark current chunk as free in header of next_chunk
-			*(next_hdr_ptr+1) = *curr_hdr_ptr;  
-		}
-
-		if (DEBUG > 0){
-			printf("Free (without coalesce) success: ");
-			printf("Neither adjacent chunk was free!\n");
-			printf("---Changed curr_chunk header to have size: %d\n", *curr_hdr_ptr);
-		}
+	if (DEBUG > 0){
+	    printf("Free (without coalesce) success: ");
+	    printf("Neither adjacent chunk was free!\n");
+	    printf("---Changed curr_chunk header to have size: %d\n\n", \
+		    *curr_hdr_ptr);
 	}
+    }
 }
