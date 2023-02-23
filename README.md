@@ -100,6 +100,11 @@ Julian Herman (netID: jbh113)
         - **EXPECT:** address of header E is next to object C.
 
   ### Performance Testing: 
-    #### What:  
-      - Filling up the array and leave 20 bytes at the end
-      Consecutively call malloc at that end-block
+      1. malloc() and immediately free() a 1-byte chunk, 120 times.
+      2. Use malloc() to get 120 1-byte chunks, storing the pointers in an array, then use free() to deallocate the chunks. 
+      3. Randomly choose between
+         - Allocating a 1-byte chunk and storing the pointer in an array
+         - Deallocating one of the chunks in the array (if any)
+        Repeat until you have called malloc() 120 times, then free all remaining allocated chunks.
+      4. Filling up 4064 bytes of the array, call malloc and free 120 times at that end-block.
+      5. Keep 
