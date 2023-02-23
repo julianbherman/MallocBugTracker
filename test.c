@@ -12,11 +12,19 @@
 
 
 bool test0_1(){
-    return false;
+    int* p = malloc(sizeof(int)*4);
+    bool passed = ( *(p-2) == 2 );
+    free(p);
+    return (passed);
 }
 
 bool test0_2(){
-    return false;
+    int* p = malloc(sizeof(int)*4);
+    int* q = malloc(sizeof(int)*4);
+    free(p);
+    bool passed = ( *(q-8) < 0 );
+    free(q);
+    return (passed);
 }
 
 bool test1() {
@@ -40,34 +48,34 @@ bool test2() {
     int i;
     for (i = 0; i < 10; i++)
     {
-        a[i] = 1;
-        b[i] = 2;
-        c[i] = 3;
-        d[i] = 4;
-        e[i] = 5;
+	a[i] = 1;
+	b[i] = 2;
+	c[i] = 3;
+	d[i] = 4;
+	e[i] = 5;
     }
 
     bool failed = false;
     for (i = 0; i < 10; i++)
-        if (a[i] != 1) {
-           return failed;
-        }
+	if (a[i] != 1) {
+	    return failed;
+	}
     for (i = 0; i < 10; i++)
-        if (b[i] != 2) {
-           return failed;
-        }
+	if (b[i] != 2) {
+	    return failed;
+	}
     for (i = 0; i < 10; i++)
-        if (c[i] != 3) {
-           return failed;
-        }
+	if (c[i] != 3) {
+	    return failed;
+	}
     for (i = 0; i < 10; i++)
-        if (d[i] != 4) {
-           return failed;
-        }
+	if (d[i] != 4) {
+	    return failed;
+	}
     for (i = 0; i < 10; i++)
-        if (e[i] != 5) {
-           return failed;
-        }
+	if (e[i] != 5) {
+	    return failed;
+	}
 
     free(a);
     free(b);
@@ -84,17 +92,17 @@ bool test3(){
     char* c3 = (char*) malloc(sizeof(char)*8);
     for (int i = 0; i < 8; i++)
     {
-        c1[i] = 'a' + i;
-        c2[i] = 'i' + i;
-        c3[i] = 'q' + i;
+	c1[i] = 'a' + i;
+	c2[i] = 'i' + i;
+	c3[i] = 'q' + i;
     }
 
     bool failed = false;
     for (int i = 0; i < 8; i++){
-        if (c1[i] != ('a' + i))
-            return failed;
-        if (c2[i] != ('i' + i))
-            return failed;
+	if (c1[i] != ('a' + i))
+	    return failed;
+	if (c2[i] != ('i' + i))
+	    return failed;
     }
 
     free(c1);
@@ -168,8 +176,8 @@ bool test5() {
 
 int main() {
     printf("TEST 0: Singularity Check:\n");
-        printf("    ---TEST0.1: Check if malloc assign first 4 bytes of memory as current chunk size: "); test0_1() ? printf(GREEN "PASSED\n" RESET) : printf(RED "FAILED\n" RESET);   
-        printf("    ---TEST0.2: Check if free mark first 4 bytes of memory as not in use: "); test0_2() ? printf(GREEN "PASSED\n" RESET) : printf(RED "FAILED\n" RESET);   
+    printf("    ---TEST0.1: Check if malloc assign first 4 bytes of memory as current chunk size: "); test0_1() ? printf(GREEN "PASSED\n" RESET) : printf(RED "FAILED\n" RESET);   
+    printf("    ---TEST0.2: Check if free mark first 4 bytes of memory as not in use: "); test0_2() ? printf(GREEN "PASSED\n" RESET) : printf(RED "FAILED\n" RESET);   
     printf("TEST 1: Free mark chunk not_in_use\n");
     test1() ? printf(GREEN "PASSED\n" RESET) : printf(RED "FAILED\n" RESET);
     printf("TEST 2: Malloc preserves unallocated memory\n");
@@ -185,6 +193,3 @@ int main() {
 
     return 0;
 }
-
-
-
