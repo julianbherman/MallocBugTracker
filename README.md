@@ -4,6 +4,15 @@ Professor Menendez
 Long Tran (netID: lht21)  
 Julian Herman (netID: jbh113)  
 
+## Makefile notice:
+  ### make (default) will run in non-debug mode
+  - To run debug mode, please compile manually using:
+      ```
+        gcc -c mymalloc.c -DDEBUG=1
+        gcc -c err.c
+        gcc -o program mymalloc.o err.o
+      ```
+
 ## Implementation Details
 
 - alignment to 8 bytes is guaranteed
@@ -21,14 +30,6 @@ Julian Herman (netID: jbh113)
 - the last 8 bytes of the global memory array remain zero-filled (indicating end of memory)
 - Maximum capacity of payload: 4080 bytes ~ 4080 chars ~ 1020 integers
 
-## Makefile notice:
-  ### make (default) will run in non-debug mode
-  - To run debug mode, please compile manually using:
-      ```
-        gcc -c mymalloc.c -DDEBUG=1
-        gcc -c err.c
-        gcc -o program mymalloc.o err.o
-      ```
 
 ## Correctness Testing Plan
   ### Run Tests:
@@ -99,7 +100,8 @@ Julian Herman (netID: jbh113)
         - Assign object E of 64 bytes (including HEADERSIZE) (14 integers object)
         - **EXPECT:** address of header E is next to object C.
 
-  ### Performance Testing: 
+
+## Performance Testing: 
       1. malloc() and immediately free() a 1-byte chunk, 120 times.
       2. Use malloc() to get 120 1-byte chunks, storing the pointers in an array, then use free() to deallocate the chunks. 
       3. Randomly choose between
@@ -107,4 +109,4 @@ Julian Herman (netID: jbh113)
          - Deallocating one of the chunks in the array (if any)
         Repeat until you have called malloc() 120 times, then free all remaining allocated chunks.
       4. Filling up 4064 bytes of the array, call malloc and free 120 times at that end-block.
-      5. Keep 
+      5. Filling up 4064 bytes of the array with chars, calling free from middle of memory and continuing outwards. tests coalescing!
