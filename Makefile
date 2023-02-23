@@ -29,4 +29,4 @@ memgrind.o: memgrind.c mymalloc.h
 	$(CC) $(CFLAGS) -c $<	
 
 clean:
-	rm -f program test debug memgrind *.o
+	rm -f err test debug memgrind *.o

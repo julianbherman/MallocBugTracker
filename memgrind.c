@@ -11,12 +11,11 @@ long count_time(struct timeval start, struct timeval end){
 }
 
 void print_time(long time){
-    printf("Time taken is : %ld  msecs\n", time);
+    printf("Time taken is: %ldmsecs\n", time);
 }
 void print_time_double(double time){
-    printf("Time taken is : %f  msecs\n", time); 
+    printf("Time taken is: %fmsecs\n", time); 
 }
-
 void test1(){
     // malloc and free, 120 times
     struct timeval start, end;
@@ -143,19 +142,21 @@ void test5(){
             arr[i] = p;
         }
         gettimeofday(&start, NULL);
-        for (int i = 0; i < 120; i++)
+        int ptr_left = 126;
+        int ptr_right = 127;
+        for (int i = 0; i < 127; i++)
         {
-            p = (char*) malloc(sizeof(char)*1);
-            free(p);   
+            free(arr[ptr_left]);
+            free(arr[ptr_right]);
+            ptr_left--;
+            ptr_right++;
         }  
         gettimeofday(&end, NULL);
-        for (int i = 0; i < 254; i++) 
-            free(arr[i]);
         average_time += count_time(start,end);
         //print_time(count_time(start,end));
     }
     printf("The average time is: \n");
-    print_time_double(average_time/(double)repeat);   
+    print_time_double(average_time/(double)repeat); 
 }
 int main(){
     printf("TEST 1: Malloc and immediately free 120 times\n");
@@ -166,7 +167,8 @@ int main(){
     test3(); 
     printf("TEST 4: Fill up memory 4064 bytes; malloc and free 120 times at the end of memory\n");
     test4();
-    printf("")
+    printf("TEST 5: Fill up memory 4064 bytes;\n"); 
+    test5();
     printf("\n\n");
     return 0;
 }

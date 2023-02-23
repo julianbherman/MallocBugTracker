@@ -44,6 +44,9 @@ int main(int argc, char **argv)
         free(q + 2);
         free(q);
         break;
+    case 6:
+        free(NULL);
+        break;
     }
 
     
