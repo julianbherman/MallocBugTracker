@@ -1,8 +1,8 @@
 CC = gcc
 CFLAGS = -std=c99 -g -Wall -fsanitize=address,undefined
 
-run: mymalloc.o err.o
-	$(CC) $(CFLAGS) -o program $^
+err: mymalloc.o err.o
+	$(CC) $(CFLAGS) -o err $^
 
 debug: mymalloc-debug.o err.o
 	$(CC) $(CFLAGS) -o $@ $^
