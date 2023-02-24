@@ -109,7 +109,7 @@ Julian Herman (netID: jbh113)
 
   9. malloc() correctly assigns chunk size to metadata  
 
-	#### TESTING METHOD  
+#### TESTING METHOD  
 
 	- Assign an object of 4 integers (16 bytes == 2 quadwords)  
 	- **EXPECT** 
@@ -118,7 +118,7 @@ Julian Herman (netID: jbh113)
 
   10. each call to free() will check both adjacent chunks and coalesce if possible  
 
-        #### TESTING METHOD  
+        #### TESTING METHOD
 
         - Assigning 4 consecutive objects of 8 bytes
         - Check coalesce on right:
