@@ -28,24 +28,30 @@ Julian Herman (netID: jbh113)
       - positive meaning it is in use
       - negative meaning it is NOT in use
 - the last 8 bytes of the global memory array remain zero-filled (indicating end of memory)
-- maximum capacity of payload: 4080 bytes ~ 4080 chars ~ 1020 integers (assuming the macro "memsize" is set to "512" quadwords ~ 4096 bytes)
-    - this is because this implementation reserves 8 bytes for the initial header (when there is only one chunk) and 8 bytes at the end of the array to mark memory end -> 4096-(8+8)=4080
+- initial maximum capacity of payload: 4080 bytes ~ 4080 chars ~ 1020 integers (assuming the macro "memsize" is set to "512" quadwords ~ 4096 bytes)
+    - this is because this implementation reserves 8 bytes for the initial header (when there is only one chunk) and 8 bytes at the end of the array to mark memory end -> 4096 - (8 + 8) = 4080 bytes
 
 
-
-## Correctness Testing Plan
-  ### Run Tests:
-  - Use Makefile to run tests:
-  - *tests are not implemented DEBUG mode*
+## Correctness Testing
+  ### Use Makefile to run tests:
   ```
     make test
     ./test
   ```
+  - NOTE: *tests do not have DEBUG mode*
 
-  - Assert at the start of every first case to check if beginning of memory is not_in_use
+  ### Library Properties (how do you check it, specify methods.. REFLECT: which properties were we able to prove.. )  
+  1. malloc() ONLY reserves unallocated memory: it does NOT interfere with memory that has already been allocated.  
+  2. if requested amount of space is available, malloc() returns a pointer to the payload of said space
+  	- otherwise, malloc() notifies user it does not possess enough space  
+  3. free() successfully deallocates memory
+  4. each call to free() will check both adjacent chunks and coalesce if possible
+  5. if free() is called on a pointer to a chunk that has already been freed, there is no change to the metadata and an appropriate error is printed
+  6. if free() is called on a pointer that was not provided by malloc(), there is no change to the metadata and an appropriate error is printed
+  	- NOTE: this also includes pointers that do not point to the beginning of a chunk 
+  7. ensures 8 byte alignment such that all pointers returned by malloc() are divisible by 8
 
-
-  ### What:
+  ### Testing Methods
     - Singularity check:
       - Check if Malloc() assign first 4 bytes of memory as current chunk size
         #### How:
@@ -103,12 +109,24 @@ Julian Herman (netID: jbh113)
         - **EXPECT:** address of header E is next to object C.
 
 
-## Performance Testing: 
-      1. malloc() and immediately free() a 1-byte chunk, 120 times.
-      2. Use malloc() to get 120 1-byte chunks, storing the pointers in an array, then use free() to deallocate the chunks. 
-      3. Randomly choose between
-         - Allocating a 1-byte chunk and storing the pointer in an array
-         - Deallocating one of the chunks in the array (if any)
-        Repeat until you have called malloc() 120 times, then free all remaining allocated chunks.
-      4. Filling up 4064 bytes of the array, call malloc and free 120 times at that end-block.
-      5. Filling up 4064 bytes of the array with chars, calling free from middle of memory and continuing outwards. tests coalescing!
+## Performance Testing
+      1. malloc() and immediately free() a 1-byte chunk. repeat 120 times.
+      2. use malloc() to allocate 120 1-byte chunks (storing the pointers in an array). then use free() to deallocate the chunks. 
+      3. randomly choose between
+         - allocating a 1-byte chunk (and storing the pointer in an array)
+         - deallocating one of the chunks (if there are any in the array) 
+         repeat until you have called malloc() 120 times. then free all remaining allocated chunks.
+      4. fill-up 4064 bytes of the array with 254 chunks. then malloc() and immediately free a single chunk 120 times (at the end of memory).
+         - this demonstrates a weak-point in the design: malloc() and free() (to verify the pointer) must iterate through each chunk in the array, which is O(n) in worst-case.
+      5. fill-up 4064 bytes of the array with 254 chunks. then free() from middle of memory outwards.
+         - this tests the robustness and speed of the coalescing feature.
+
+## Design Notes
+    - Space waste as a tradeoff for 8-byte alignment:
+      - in order to ensure 8 byte alignment, this implementation immediately pads-up / rounds-up the requested space to the nearest multiple of 8
+        - this wastes a maximum of 7 bytes in the worst case scenario (where size%8=1)
+      - additionally (in the worst case scenario), if the first free chunk in memory of size >= the requested size is EXACTLY 8 bytes larger (than the requested size), then malloc() returns the entire chunk and does NOT split it (8 bytes is only enough space for a header in this implementatio and if it was splitted, would result in a chunk size of 0 which is reserved for memory start and end)  
+        - this effectively wastes 8 bytes
+      - therefore, maximum space-waste per chunk is 7 + 8 = 15 bytes
+    - Iterating through each block in the memory array as a method to validate pointers and find free chunks is costly
+      - this is demonstrated in memgrind performance test 4 
