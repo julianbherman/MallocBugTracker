@@ -84,7 +84,6 @@ Julian Herman (netID: jbh113)
   	- *confirmed in err.c*
 
   6. if free() is called on a pointer that was not provided by malloc(), there is no change to the metadata and an appropriate error is printed. NOTE: this also includes pointers that do not point to the beginning of a chunk.  
-
 	- *confirmed in err.c*
 
   7. ensures 8 byte alignment such that all pointers returned by malloc() are divisible by 8  
