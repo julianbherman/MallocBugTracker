@@ -70,7 +70,8 @@ Julian Herman (netID: jbh113)
         - Free that object
         - **EXPECT** memory should be marked as NOT_IN_USE
 
-  4. free() coalescing accounts for minor memory fragmentation
+  4. free() coalescing accounts for minor memory fragmentation  
+
   	#### TESTING METHOD  
 
         - Assign 2 objects of payload size 48, called A and B (including HEADERSIZE) 
