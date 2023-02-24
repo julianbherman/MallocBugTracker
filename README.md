@@ -92,15 +92,15 @@ Julian Herman (netID: jbh113)
         - Write string of 8 words in objects
         - **EXPECT** the strings still hold
 
-  9. malloc() correctly assigns chunk size to metadata
-	#### TESTING METHOD
-	- Assign an object of 4 integers (16 bytes == 2 quadwords)
+  9. malloc() correctly assigns chunk size to metadata   
+	#### TESTING METHOD   
+	- Assign an object of 4 integers (16 bytes == 2 quadwords)  
 	- **EXPECT** 
   	- First 4 bytes of memory is IN_USE
   	- Size of first 4 bytes of memory == 2 (quadwords)
 
-  10. each call to free() will check both adjacent chunks and coalesce if possible
-        #### TESTING METHOD
+  10. each call to free() will check both adjacent chunks and coalesce if possible  
+        #### TESTING METHOD  
         - Assigning 4 consecutive objects of 8 bytes
         - Check coalesce on right:
           - free() 2nd object and then free 1st object
@@ -113,7 +113,7 @@ Julian Herman (netID: jbh113)
         - Check coalesce on both sides:
           - free() 1st object and 3rd object
           - Assign 40 bytes object - Called BothSideCoalesce
-          - **EXPECT:** BothSideCoalesce's location is at the beginning of memory  
+          - **EXPECT** BothSideCoalesce's location is at the beginning of memory  
 
 
 
