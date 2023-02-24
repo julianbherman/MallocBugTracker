@@ -61,6 +61,7 @@ Julian Herman (netID: jbh113)
 
         - malloc() until memory runs out of space
         - **EXPECT** error message warning there is no more space.
+	- *confirmed in err.c*
 
   3. free() successfully deallocates memory  
 
