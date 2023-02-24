@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <string.h>
 #include "mymalloc.c"
 
@@ -20,10 +21,8 @@ bool test0_1(){
 
 bool test0_2(){
     int* p = malloc(sizeof(int)*4);
-    int* q = malloc(sizeof(int)*4);
     free(p);
-    bool passed = ( *(q-8) < 0 );
-    free(q);
+    bool passed = ( *(p-2) < 0 );
     return (passed);
 }
 
@@ -171,7 +170,28 @@ bool test5() {
     free(d);
     free(e);
     return passed;
+}
 
+bool test6() {
+    void* a = malloc(sizeof(int)*11);
+    void* b = malloc(sizeof(int)*54);
+    void* c = malloc(sizeof(int)*1);
+    void* d = malloc(sizeof(int)*91);
+    void* e = malloc(sizeof(int)*14);
+
+    bool ba, bb, bc, bd, be;
+    ba = (((uintptr_t)a)&7) == 0;
+    bb = (((uintptr_t)b)&7) == 0;
+    bc = (((uintptr_t)c)&7) == 0;
+    bd = (((uintptr_t)d)&7) == 0;
+    be = (((uintptr_t)e)&7) == 0;
+    bool passed = ba && bb && bc && bd && be;
+    free(a);
+    free(b);
+    free(c);
+    free(d);
+    free(e);
+    return passed;
 }
 
 int main() {
@@ -190,6 +210,8 @@ int main() {
     printf("    ---TEST4.3: on left: "); test4_3() ? printf(GREEN "PASSED\n" RESET) : printf(RED "FAILED\n" RESET);    
     printf("TEST 5: Check Coalesces on Memory Fragment\n");
     test5() ? printf(GREEN "PASSED\n" RESET) : printf(RED "FAILED\n" RESET); 
+    printf("TEST 6: Check if pointer addresses are multiples of 8\n");
+    test6() ? printf(GREEN "PASSED\n" RESET) : printf(RED "FAILED\n" RESET); 
 
     return 0;
 }

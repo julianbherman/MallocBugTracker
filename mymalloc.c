@@ -52,7 +52,7 @@ static void createHeader(double* p, int chunk_size, int prev_size){
 static void *allocateChunk(double* p, int size, int curr_chunk_size){
     *(int*)p = curr_chunk_size; // mark chunk as in_use: set positive size
     int extra_space = curr_chunk_size - size; // calculate leftover space 
-    if ( extra_space >= HEADERSIZE ) // enough leftover to split?
+    if ( extra_space >= 1 + HEADERSIZE ) // enough leftover to split?
     {	// then split the chunk
 	createHeader(p+HEADERSIZE+size, extra_space-HEADERSIZE, size);
 	// Change size of current chunk and mark as in_use (size is positive)
@@ -62,7 +62,7 @@ static void *allocateChunk(double* p, int size, int curr_chunk_size){
 	if ( *next_hdr_ptr ) { *(next_hdr_ptr+1) = curr_chunk_size; }
     }
     // not enough space to split chunk, then leave the size as is (wasteful)
-    // wastes a max of ~(15 bytes + initial padding of size) per each chunk
+    // wastes a max of ~(15bytes = 8bytes from not splitting + 7bytes from initial padding of size) per each chunk
     if (DEBUG > 0) {
 	printf("Chunk allocated!\n---Payload at: %p\n\n", (p+HEADERSIZE));
     }
@@ -98,7 +98,7 @@ void *mymalloc(size_t size, char* file, int line){
 	p += HEADERSIZE + curr_chunk_size; // shift to next chunk
     }
 
-    printf(RED "[%s:%d] malloc failed: no space in memory!\n" RESET, file, line);
+    printf(RED "[%s:%d] malloc failed: could not find contiguous chunk large enough!\n" RESET, file, line);
     return NULL;
 }
 

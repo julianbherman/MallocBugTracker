@@ -4,6 +4,8 @@ Professor Menendez
 Long Tran (netID: lht21)  
 Julian Herman (netID: jbh113)  
 
+
+
 ## Makefile Intructions
   ### 'make' (default) will run in non-debug mode
   - To run debug mode, please compile manually using:
@@ -12,6 +14,8 @@ Julian Herman (netID: jbh113)
         gcc -c err.c
         gcc -o program mymalloc.o err.o
       ```
+
+
 
 ## Implementation Details
 
@@ -32,6 +36,7 @@ Julian Herman (netID: jbh113)
     - this is because this implementation reserves 8 bytes for the initial header (when there is only one chunk) and 8 bytes at the end of the array to mark memory end -> 4096 - (8 + 8) = 4080 bytes
 
 
+
 ## Correctness Testing
   ### Use Makefile to run tests:
   ```
@@ -40,50 +45,62 @@ Julian Herman (netID: jbh113)
   ```
   - NOTE: *tests do not have DEBUG mode*
 
-  ### Library Properties (how do you check it, specify methods.. REFLECT: which properties were we able to prove.. )  
+  ### Library Properties
   1. malloc() ONLY reserves unallocated memory: it does NOT interfere with memory that has already been allocated.  
-  2. if requested amount of space is available, malloc() returns a pointer to the payload of said space
-  	- otherwise, malloc() notifies user it does not possess enough space  
-  3. free() successfully deallocates memory
-  4. each call to free() will check both adjacent chunks and coalesce if possible
-  5. if free() is called on a pointer to a chunk that has already been freed, there is no change to the metadata and an appropriate error is printed
-  6. if free() is called on a pointer that was not provided by malloc(), there is no change to the metadata and an appropriate error is printed
-  	- NOTE: this also includes pointers that do not point to the beginning of a chunk 
-  7. ensures 8 byte alignment such that all pointers returned by malloc() are divisible by 8
-
-  ### Testing Methods
-    - Singularity check:
-      - Check if Malloc() assign first 4 bytes of memory as current chunk size
-        #### How:
-          - Assign an object of 4 integers
-          - **EXPECT** 
-            - First 4 bytes of memory is IN_USE
-            - Value of first 4 bytes of memory == 2
-      - Check if Free() mark first 4 bytes of memory as not in use
-        #### How: 
-          - Assign an object of 4 integers
-          - Free that object
-          - **EXPECT**
-            - First 4 bytes of memory in NOT_IN_USE
-    - Free() mark chunk as not_in_use
-        #### How:
-          - Assign an object
-          - Free object
-          - **EXPECT** address of that object as beginning of memory
-    - Malloc() preserves unallocated memory
-        #### How:
+	#### TESTING METHOD
         - Malloc() serveral objects
         - Write different values for each object
         - Check again if any object has values changed unexpectedly
         - **EXPECT** NO object has changed values.
-    - Padding Alignment gives multiplication of 8 bytes
-        #### How:
+
+  2. if requested amount of space is available, malloc() returns a pointer to the payload of said space. otherwise, malloc() notifies user it does not possess enough space  
+	#### TESTING METHOD
+        - malloc() until memory runs out of space
+        - **EXPECT** error message warning there is no more space.
+
+  3. free() successfully deallocates memory
+	#### TESTING METHOD 
+        - Assign an object of 4 integers
+        - Free that object
+        - **EXPECT** memory should be marked as NOT_IN_USE
+
+  4. free() coalescing accounts for minor memory fragmentation
+  	#### TESTING METHOD 
+        - Assign 2 objects of payload size 48, called A and B (including HEADERSIZE) 
+        - Free the object A -> 48 bytes is freed (including HEADERSIZE)
+        - Assigning object C of 32 bytes (HEADERSIZE included) -> 16 free bytes in sandwiched by 2 in_use neighbors
+        - Assign object D of 48 bytes -> It will be assigned to right of B
+        - Free object B 
+        - **EXPECT:** Free Coalesce the small memory fragmentation and create a free chunk of 64 bytes (48 + 16).
+        - Assign object E of 64 bytes (including HEADERSIZE) (14 integers object)
+        - **EXPECT:** address of header E is next to object C.
+
+  5. if free() is called on a pointer to a chunk that has already been freed, there is no change to the metadata and an appropriate error is printed
+  	- *confirmed in err.c*
+  6. if free() is called on a pointer that was not provided by malloc(), there is no change to the metadata and an appropriate error is printed
+  	- NOTE: this also includes pointers that do not point to the beginning of a chunk 
+	- *confirmed in err.c*
+  7. ensures 8 byte alignment such that all pointers returned by malloc() are divisible by 8
+	#### TESTING METHOD 
+	- malloc() a bunch of different sized chunks
+	- **EXPECT** the pointer address returned is divisible by 8
+  	
+  8. padding for alignment correctly rounds-up requested size to a multiple of 8 bytes
+        #### TESTING METHOD 
         - Malloc a char object of 6 bytes and a char object of 4 bytes and a char object of 8 bytes
         - Expected Malloc() to gives 3 pointers of 8 bytes
         - Write string of 8 words in objects
-        - **EXPECT** the strings still holds
-    - Free() coalesce with neighbors
-        #### How:
+        - **EXPECT** the strings still hold
+
+  9. malloc() correctly assigns chunk size to metadata
+	#### TESTING METHOD
+	- Assign an object of 4 integers (16 bytes == 2 quadwords)
+	- **EXPECT** 
+  	- First 4 bytes of memory is IN_USE
+  	- Size of first 4 bytes of memory == 2 (quadwords)
+
+  10. each call to free() will check both adjacent chunks and coalesce if possible
+        #### TESTING METHOD
         - Assigning 4 consecutive objects of 8 bytes
         - Check coalesce on right:
           - free() 2nd object and then free 1st object
@@ -97,16 +114,7 @@ Julian Herman (netID: jbh113)
           - free() 1st object and 3rd object
           - Assign 40 bytes object - Called BothSideCoalesce
           - **EXPECT:** BothSideCoalesce's location is at the beginning of memory  
-    - Coalescing on Memory Fragmentation:
-        #### How:
-        - Assign 2 objects of payload size 48, called A and B (including HEADERSIZE) 
-        - Free the object A -> 48 bytes is freed (including HEADERSIZE)
-        - Assigning object C of 32 bytes (HEADERSIZE included) -> 16 free bytes in sandwiched by 2 in_use neighbors
-        - Assign object D of 48 bytes -> It will be assigned to right of B
-        - Free object B 
-        - **EXPECT:** Free Coalesce the small memory fragmentation and create a free chunk of 64 bytes (48 + 16).
-        - Assign object E of 64 bytes (including HEADERSIZE) (14 integers object)
-        - **EXPECT:** address of header E is next to object C.
+
 
 
 ## Performance Testing
@@ -121,7 +129,10 @@ Julian Herman (netID: jbh113)
       5. fill-up 4064 bytes of the array with 254 chunks. then free() from middle of memory outwards.
          - this tests the robustness and speed of the coalescing feature.
 
+
+
 ## Design Notes
+    - ALL library properties were successfully proved
     - Space waste as a tradeoff for 8-byte alignment:
       - in order to ensure 8 byte alignment, this implementation immediately pads-up / rounds-up the requested space to the nearest multiple of 8
         - this wastes a maximum of 7 bytes in the worst case scenario (where size%8=1)
