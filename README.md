@@ -132,7 +132,7 @@ Julian Herman (netID: jbh113)
     make memgrind
     ./memgrind
   ```
-  - NOTE: *memgrind does not have DEBUG mode*
+  NOTE: *memgrind does not have DEBUG mode*
 
 
       1. malloc() and immediately free() a 1-byte chunk. repeat 120 times.
