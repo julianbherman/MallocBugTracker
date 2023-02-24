@@ -100,7 +100,7 @@ Julian Herman (netID: jbh113)
   	
   8. padding for alignment correctly rounds-up requested size to a multiple of 8 bytes  
 
-        #### TESTING METHOD  
+  	#### TESTING METHOD  
 
         - Malloc a char object of 6 bytes and a char object of 4 bytes and a char object of 8 bytes
         - Expected Malloc() to gives 3 pointers of 8 bytes
@@ -117,7 +117,8 @@ Julian Herman (netID: jbh113)
   	- Size of first 4 bytes of memory == 2 (quadwords)
 
   10. each call to free() will check both adjacent chunks and coalesce if possible  
-  #### TESTING METHOD
+
+  	#### TESTING METHOD  
 
         - Assigning 4 consecutive objects of 8 bytes
         - Check coalesce on right:
