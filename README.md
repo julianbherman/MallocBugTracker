@@ -43,7 +43,7 @@ Julian Herman (netID: jbh113)
     make test
     ./test
   ```
-  - NOTE: *tests do not have DEBUG mode*
+  - NOTE: *test does not have DEBUG mode*
 
   ### Library Properties and Corresponding Testing Methods
   1. malloc() ONLY reserves unallocated memory: it does NOT interfere with memory that has already been allocated.  
@@ -126,7 +126,15 @@ Julian Herman (netID: jbh113)
 
 
 
-## Performance Testing
+## Performance Testing  
+  ### Use Makefile to run memgrind:
+  ```
+    make memgrind
+    ./memgrind
+  ```
+  - NOTE: *memgrind does not have DEBUG mode*
+
+
       1. malloc() and immediately free() a 1-byte chunk. repeat 120 times.
       2. use malloc() to allocate 120 1-byte chunks (storing the pointers in an array). then use free() to deallocate the chunks. 
       3. randomly choose between
